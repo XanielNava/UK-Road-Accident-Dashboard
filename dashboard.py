@@ -2,14 +2,8 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-# -----------------------
-# PAGE CONFIG
-# -----------------------
 st.set_page_config(page_title="UK Road Safety Dashboard", layout="wide")
 
-# -----------------------
-# LOAD DATA
-# -----------------------
 @st.cache_data
 def load_data():
     df = pd.read_csv("Final_Dashboard_Data.csv", nrows=500000)
@@ -72,11 +66,22 @@ col1.metric("Total Accidents", f"{len(filtered_df):,}")
 fatal_count = len(filtered_df[filtered_df["accident_severity"] == "Fatal"])
 col2.metric("Fatal Accidents", f"{fatal_count:,}")
 
-avg_vehicle_age = filtered_df["age_of_vehicle"].mean()
-col3.metric(
-    "Avg Vehicle Age",
-    f"{avg_vehicle_age:.1f}" if pd.notnull(avg_vehicle_age) else "N/A"
-)
+st.subheader("Vehicle Age Distribution")
+
+if "age_of_vehicle" in filtered_df.columns:
+    clean_df = filtered_df.dropna(subset=["age_of_vehicle"])
+
+    if clean_df.empty:
+        st.warning("No available data for Vehicle Age Distribution")
+    else:
+        fig_age = px.histogram(
+            clean_df,
+            x="age_of_vehicle",
+            nbins=30
+        )
+        st.plotly_chart(fig_age, use_container_width=True)
+else:
+    st.warning("age_of_vehicle column not found")
 
 if "vehicle_type" in filtered_df.columns:
     col4.metric("Unique Vehicle Types", filtered_df["vehicle_type"].nunique())
